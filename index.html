@@ -721,7 +721,7 @@ function renderMemory(sid,m){
   Object.keys(comments).sort((a,b)=>(comments[a].ts||0)-(comments[b].ts||0)).forEach(cid=>{ const c=comments[cid]||{}; cl+=`<div class="cmt"><b>${esc(c.name||"匿名")}</b><span>${esc(c.text||"")}</span><button title="刪除" onclick="delComment('${sid}','${cid}')">✕</button></div>`; });
   const myName=escAttr(localStorage.getItem("fukuoka_name")||"");
   el.innerHTML=`
-    <div class="mem-h">📝 回憶 &amp; 評分</div>
+    <div class="mem-h">📝 紀錄</div>
     <div class="stars">${stars}<span class="rate-num">${rating?rating+" / 5":"點星評分"}</span></div>
     <div class="ph-grid">${pg}<label class="ph-add">＋ 照片<input type="file" accept="image/*" onchange="addPhoto('${sid}',this)"></label></div>
     <div class="cmts">${cl}</div>
