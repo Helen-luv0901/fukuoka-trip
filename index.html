@@ -51,9 +51,20 @@
 
   /* ---------- Masthead ---------- */
   header{
-    text-align:center; padding:46px 20px 30px; position:relative;
+    text-align:center; padding:46px 20px 30px; position:relative; overflow:hidden;
     border-bottom:1px solid var(--line);
   }
+  header::before{
+    content:""; position:absolute; inset:0; z-index:0;
+    background:url('https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/20100718_Fukuoka_2870.jpg/1920px-20100718_Fukuoka_2870.jpg') center 30% / cover no-repeat;
+    opacity:.30;
+    -webkit-mask-image:linear-gradient(to bottom, rgba(0,0,0,1) 55%, rgba(0,0,0,0) 100%);
+    mask-image:linear-gradient(to bottom, rgba(0,0,0,1) 55%, rgba(0,0,0,0) 100%);
+    pointer-events:none;
+  }
+  header > *{position:relative; z-index:1;}
+  .credit{font-size:.66rem; color:var(--sub); opacity:.7; text-align:center; margin-top:14px; letter-spacing:.02em;}
+  .credit a{color:var(--sub);}
   .kicker{
     font-family:var(--sans); font-size:.7rem; letter-spacing:.42em;
     text-transform:uppercase; color:var(--accent); font-weight:700;
@@ -245,6 +256,7 @@
 
   <p class="note">點任一行程卡片可展開店家詳情與地圖連結。<br>交通資訊已逐段查證（2026 年 6 月）;出發前請再確認班次與營業狀況。</p>
   <div class="footer-mark">❖ ❖ ❖</div>
+  <p class="credit">頭圖:百道濱海濱公園與福岡塔｜Photo by Jakub Hałun, <a href="https://commons.wikimedia.org/wiki/File:20100718_Fukuoka_2870.jpg" target="_blank" rel="noopener">Wikimedia Commons</a>, CC BY-SA 4.0</p>
 </div>
 
 <script>
