@@ -4,97 +4,220 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>福岡 7天6夜行程攻略 | 2026.7.21 - 7.27</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600;700;800&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#f6f4ef; --card:#ffffff; --ink:#2d2a26; --sub:#7a746b;
-    --accent:#c4453a; --accent2:#1f6e5c; --line:#e5e0d6; --chip:#eef3f1;
-    --transit:#3a6ea5;
+    --bg:#f4f1ea;          /* warm ivory */
+    --paper:#fbfaf6;       /* card paper */
+    --ink:#23211d;         /* near-black ink */
+    --sub:#8a8276;         /* muted taupe */
+    --line:#e2dccf;        /* hairline */
+    --accent:#9c3024;      /* deep terracotta / vermilion */
+    --accent-soft:#f3e7e3;
+    --gold:#9a7b3f;        /* muted brass */
+    --green:#3f5b4c;       /* deep pine */
+    --transit:#3a5871;     /* slate blue */
+    --chip:#efeadd;
+    --serif:"Shippori Mincho",serif;
+    --sans:"Noto Sans TC",system-ui,sans-serif;
   }
   *{box-sizing:border-box; margin:0; padding:0;}
-  body{font-family:"PingFang TC","Microsoft JhengHei","Noto Sans TC",sans-serif; background:var(--bg); color:var(--ink); line-height:1.6;}
-  .wrap{max-width:760px; margin:0 auto; padding:0 16px 80px;}
-  header{background:linear-gradient(135deg,#c4453a,#a33028); color:#fff; padding:34px 16px 70px; text-align:center; border-radius:0 0 28px 28px;}
-  header h1{font-size:1.5rem; letter-spacing:2px;}
-  header p{opacity:.92; margin-top:6px; font-size:.9rem;}
-  .tabs{display:flex; gap:6px; overflow-x:auto; padding:10px 4px; margin-top:-46px; position:sticky; top:0; z-index:20; background:transparent;}
-  .tabs.stuck{background:var(--bg); box-shadow:0 2px 10px rgba(0,0,0,.06);}
-  .tab{flex:0 0 auto; background:#fff; border:1px solid var(--line); border-radius:14px; padding:8px 13px; cursor:pointer; text-align:center; min-width:78px; transition:.15s;}
-  .tab small{display:block; color:var(--sub); font-size:.68rem;}
-  .tab b{font-size:.85rem;}
-  .tab.active{background:var(--accent); border-color:var(--accent); color:#fff;}
-  .tab.active small{color:#ffd9d4;}
-  .day-title{margin:22px 4px 4px; font-size:1.12rem; font-weight:700;}
-  .day-sub{margin:0 4px 14px; color:var(--sub); font-size:.85rem;}
-  .timeline{position:relative; padding-left:18px;}
-  .timeline::before{content:""; position:absolute; left:5px; top:8px; bottom:8px; width:2px; background:var(--line);}
-  .stop{position:relative; margin-bottom:6px;}
-  .stop::before{content:""; position:absolute; left:-18px; top:22px; width:12px; height:12px; border-radius:50%; background:var(--accent); border:3px solid #fff; box-shadow:0 0 0 1px var(--line);}
-  .card{background:var(--card); border:1px solid var(--line); border-radius:16px; padding:14px 16px; cursor:pointer; transition:.15s;}
-  .card:hover{border-color:#cbb;}
-  .card .time{color:var(--accent); font-weight:700; font-size:.8rem; letter-spacing:.5px;}
-  .card .name{font-size:1.02rem; font-weight:700; margin-top:2px;}
-  .card .brief{color:var(--sub); font-size:.84rem; margin-top:2px;}
-  .card .hint{float:right; color:#bbb; font-size:.75rem; margin-top:4px;}
-  .detail{display:none; margin-top:12px; border-top:1px dashed var(--line); padding-top:12px; font-size:.88rem; cursor:auto;}
-  .stop.open .detail{display:block;}
-  .stop.open .card{border-color:var(--accent);}
-  .detail .row{display:flex; gap:8px; margin-bottom:7px;}
-  .detail .row .ico{flex:0 0 22px;}
-  .detail a.map{display:inline-block; background:var(--accent2); color:#fff; text-decoration:none; padding:7px 14px; border-radius:10px; font-size:.84rem; margin-top:6px;}
-  .warn{background:#fdf3e7; border-left:3px solid #e2a23b; padding:8px 10px; border-radius:8px; margin-top:8px; font-size:.84rem;}
-  .transit{margin:10px 0 10px 10px; background:var(--chip); border-radius:12px; padding:10px 14px; font-size:.84rem; color:#274; position:relative;}
-  .transit b{color:var(--transit);}
-  .transit .tt{font-weight:700; color:var(--transit); font-size:.8rem; margin-bottom:2px;}
-  .budget{background:#fff; border:1px solid var(--line); border-radius:16px; padding:18px; margin-top:26px;}
-  .budget h3{font-size:1rem; margin-bottom:10px;}
+  html{scroll-behavior:smooth; -webkit-text-size-adjust:100%;}
+  body{
+    font-family:var(--sans); background:var(--bg); color:var(--ink);
+    line-height:1.7; font-weight:300; letter-spacing:.01em;
+    background-image:
+      radial-gradient(circle at 12% 8%, rgba(156,48,36,.035), transparent 42%),
+      radial-gradient(circle at 88% 4%, rgba(154,123,63,.04), transparent 40%);
+  }
+  .wrap{max-width:740px; margin:0 auto; padding:0 20px 90px;}
+
+  /* ---------- Masthead ---------- */
+  header{
+    text-align:center; padding:46px 20px 30px; position:relative;
+    border-bottom:1px solid var(--line);
+  }
+  .kicker{
+    font-family:var(--sans); font-size:.7rem; letter-spacing:.42em;
+    text-transform:uppercase; color:var(--accent); font-weight:700;
+    margin-bottom:14px; padding-left:.42em;
+  }
+  header h1{
+    font-family:var(--serif); font-weight:800; line-height:1.18;
+    font-size:clamp(2rem,8vw,3rem); letter-spacing:.02em; color:var(--ink);
+  }
+  header h1 .jp{display:block; font-size:.46em; font-weight:600; color:var(--gold); letter-spacing:.3em; margin-top:10px;}
+  .meta-row{
+    display:flex; justify-content:center; flex-wrap:wrap; gap:10px 22px;
+    margin-top:22px; font-size:.78rem; color:var(--sub); letter-spacing:.08em;
+  }
+  .meta-row span{display:inline-flex; align-items:center; gap:6px;}
+  .meta-row b{color:var(--ink); font-weight:500;}
+  .rule{display:flex; align-items:center; justify-content:center; gap:14px; margin:20px auto 0; max-width:220px;}
+  .rule::before,.rule::after{content:""; height:1px; flex:1; background:var(--line);}
+  .rule span{color:var(--accent); font-size:.7rem;}
+
+  /* ---------- Tabs ---------- */
+  .tabs-shell{position:sticky; top:0; z-index:30; margin:0 -20px; padding:0 20px; background:rgba(244,241,234,.86); backdrop-filter:blur(8px); transition:.25s;}
+  .tabs-shell.stuck{box-shadow:0 6px 22px rgba(35,33,29,.08); border-bottom:1px solid var(--line);}
+  .tabs{display:flex; gap:4px; overflow-x:auto; padding:12px 0; scrollbar-width:none;}
+  .tabs::-webkit-scrollbar{display:none;}
+  .tab{
+    flex:0 0 auto; background:transparent; border:none; cursor:pointer;
+    padding:8px 6px 12px; min-width:62px; text-align:center;
+    position:relative; transition:.18s; font-family:var(--sans);
+  }
+  .tab .n{font-family:var(--serif); font-weight:700; font-size:1.02rem; color:var(--sub); transition:.18s; display:block;}
+  .tab small{display:block; color:var(--sub); font-size:.64rem; letter-spacing:.06em; margin-top:2px; opacity:.8;}
+  .tab::after{content:""; position:absolute; left:50%; bottom:2px; transform:translateX(-50%); width:0; height:2px; background:var(--accent); transition:.22s;}
+  .tab.active .n{color:var(--accent);}
+  .tab.active small{color:var(--ink); opacity:1;}
+  .tab.active::after{width:26px;}
+
+  /* ---------- Day intro ---------- */
+  .day-head{padding:30px 2px 6px; animation:fade .4s ease;}
+  .day-index{font-family:var(--serif); font-style:italic; font-size:.82rem; color:var(--gold); letter-spacing:.1em;}
+  .day-title{font-family:var(--serif); font-weight:700; font-size:clamp(1.3rem,5vw,1.6rem); line-height:1.4; margin:4px 0 12px;}
+  .day-tags{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:6px;}
+  .tag{font-size:.72rem; letter-spacing:.05em; padding:5px 11px; border-radius:999px; border:1px solid var(--line); color:var(--sub); background:var(--paper);}
+  .tag.pay{color:var(--accent); border-color:var(--accent-soft); background:var(--accent-soft); font-weight:500;}
+  @keyframes fade{from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:none;}}
+
+  /* ---------- Timeline ---------- */
+  .timeline{position:relative; padding-left:30px; margin-top:18px;}
+  .timeline::before{content:""; position:absolute; left:9px; top:6px; bottom:30px; width:1px; background:linear-gradient(var(--line),var(--line) 60%,transparent);}
+  .stop{position:relative; margin-bottom:14px;}
+  .stop .dot{position:absolute; left:-25px; top:20px; width:11px; height:11px; border-radius:50%; background:var(--paper); border:2px solid var(--accent); z-index:2;}
+  .stop .dot::after{content:""; position:absolute; inset:2px; border-radius:50%; background:var(--accent); transform:scale(0); transition:.2s;}
+  .stop.open .dot::after{transform:scale(1);}
+
+  .card{
+    background:var(--paper); border:1px solid var(--line); border-radius:4px;
+    padding:16px 18px; cursor:pointer; transition:.2s;
+    box-shadow:0 1px 0 rgba(35,33,29,.02);
+  }
+  .card:hover{border-color:var(--gold); transform:translateY(-1px); box-shadow:0 8px 22px rgba(35,33,29,.06);}
+  .stop.open .card{border-color:var(--accent); box-shadow:0 8px 26px rgba(156,48,36,.08);}
+  .card .top{display:flex; align-items:baseline; justify-content:space-between; gap:10px;}
+  .card .time{font-family:var(--serif); font-weight:600; color:var(--accent); font-size:.82rem; letter-spacing:.04em; white-space:nowrap;}
+  .card .chev{color:var(--sub); font-size:.7rem; transition:.25s; opacity:.6;}
+  .stop.open .card .chev{transform:rotate(180deg); color:var(--accent); opacity:1;}
+  .card .name{font-family:var(--serif); font-size:1.08rem; font-weight:700; margin-top:5px; line-height:1.45;}
+  .card .brief{color:var(--sub); font-size:.86rem; margin-top:4px; font-weight:300;}
+
+  .detail{max-height:0; overflow:hidden; transition:max-height .35s ease; }
+  .stop.open .detail{max-height:900px;}
+  .detail-inner{margin-top:14px; padding-top:14px; border-top:1px solid var(--line);}
+  .detail .row{display:flex; gap:10px; margin-bottom:9px; font-size:.86rem; align-items:flex-start;}
+  .detail .row .ico{flex:0 0 20px; text-align:center; opacity:.9;}
+  .detail .row span:last-child{color:#48453d;}
+  a.map{
+    display:inline-flex; align-items:center; gap:7px; margin-top:8px;
+    background:var(--green); color:#fff; text-decoration:none;
+    padding:9px 16px; border-radius:3px; font-size:.82rem; letter-spacing:.04em;
+    transition:.18s;
+  }
+  a.map:hover{background:#33493d;}
+  .warn{background:#fbf2e4; border-left:2px solid var(--gold); padding:9px 12px; border-radius:0 4px 4px 0; margin-top:9px; font-size:.84rem; color:#5d4d2c;}
+
+  /* ---------- Transit ---------- */
+  .transit{
+    margin:4px 0 4px 4px; padding:10px 0 10px 16px; font-size:.82rem;
+    color:#445; position:relative; border-left:1px dashed var(--line);
+  }
+  .transit .tt{display:inline-flex; align-items:center; gap:6px; font-weight:700; color:var(--transit); font-size:.72rem; letter-spacing:.12em; text-transform:uppercase; margin-bottom:3px;}
+  .transit b{color:var(--transit); font-weight:500;}
+
+  /* ---------- Info blocks ---------- */
+  .section-label{
+    display:flex; align-items:center; gap:14px; margin:42px 2px 4px;
+    font-family:var(--serif); font-weight:700; font-size:1.15rem;
+  }
+  .section-label::after{content:""; flex:1; height:1px; background:var(--line);}
+  .panel{background:var(--paper); border:1px solid var(--line); border-radius:5px; padding:20px; margin-top:14px;}
   table{width:100%; border-collapse:collapse; font-size:.86rem;}
-  td,th{padding:7px 6px; border-bottom:1px solid var(--line); text-align:left;}
-  td:last-child,th:last-child{text-align:right;}
-  tr:last-child td{font-weight:700; border-bottom:none;}
-  .resv{background:#fff; border:1px solid var(--line); border-radius:16px; padding:18px; margin-top:16px; font-size:.88rem;}
-  .resv h3{font-size:1rem; margin-bottom:10px;}
-  .resv li{margin:6px 0 6px 20px;}
-  .note{color:var(--sub); font-size:.78rem; text-align:center; margin-top:26px;}
-  .daypay{display:inline-block; background:#fff3f1; color:var(--accent); border-radius:10px; padding:3px 10px; font-size:.8rem; font-weight:700; margin-left:6px;}
+  th{font-family:var(--sans); font-weight:700; font-size:.72rem; letter-spacing:.08em; text-transform:uppercase; color:var(--sub);}
+  td,th{padding:9px 6px; border-bottom:1px solid var(--line); text-align:left;}
+  td:last-child,th:last-child{text-align:right; font-variant-numeric:tabular-nums;}
+  tr:last-child td{font-weight:700; border-bottom:none; color:var(--accent); font-size:.95rem;}
+  .panel ol{margin:2px 0 0 18px;}
+  .panel ol li{margin:9px 0; font-size:.88rem; padding-left:4px;}
+  .panel ol li b{color:var(--ink); font-weight:700;}
+  .note{color:var(--sub); font-size:.78rem; text-align:center; margin-top:34px; line-height:1.9; font-weight:300;}
+  .footer-mark{text-align:center; font-family:var(--serif); color:var(--gold); font-size:1.1rem; letter-spacing:.3em; margin-top:40px;}
+
+  /* ---------- Packing checklist ---------- */
+  .pack-head{display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:8px;}
+  .pack-progress{font-size:.74rem; color:var(--sub); letter-spacing:.06em; font-variant-numeric:tabular-nums;}
+  .pack-bar{height:4px; border-radius:999px; background:var(--line); margin:10px 0 18px; overflow:hidden;}
+  .pack-bar i{display:block; height:100%; width:0; background:linear-gradient(90deg,var(--accent),var(--gold)); transition:width .35s ease;}
+  .pack-cat{margin-top:16px;}
+  .pack-cat:first-child{margin-top:0;}
+  .pack-cat h4{font-family:var(--serif); font-size:.95rem; font-weight:700; margin-bottom:8px; display:flex; align-items:center; gap:8px;}
+  .pack-cat h4 .ln{flex:1; height:1px; background:var(--line);}
+  .pack-item{display:flex; align-items:flex-start; gap:11px; padding:8px 4px; cursor:pointer; border-radius:4px; transition:.12s; user-select:none;}
+  .pack-item:hover{background:var(--chip);}
+  .pack-box{flex:0 0 19px; width:19px; height:19px; margin-top:2px; border:1.5px solid var(--gold); border-radius:4px; display:flex; align-items:center; justify-content:center; transition:.15s;}
+  .pack-box::after{content:"✓"; color:#fff; font-size:.72rem; opacity:0; transform:scale(.5); transition:.15s;}
+  .pack-item.done .pack-box{background:var(--accent); border-color:var(--accent);}
+  .pack-item.done .pack-box::after{opacity:1; transform:scale(1);}
+  .pack-txt{font-size:.88rem; line-height:1.5;}
+  .pack-txt b{font-weight:500;}
+  .pack-txt small{display:block; color:var(--sub); font-size:.76rem; margin-top:1px;}
+  .pack-item.done .pack-txt{color:var(--sub); text-decoration:line-through; text-decoration-color:var(--line);}
+  .pack-reset{display:inline-block; margin-top:14px; font-size:.76rem; color:var(--sub); background:none; border:1px solid var(--line); border-radius:999px; padding:5px 14px; cursor:pointer; font-family:var(--sans); transition:.15s;}
+  .pack-reset:hover{color:var(--accent); border-color:var(--accent);}
 </style>
 </head>
 <body>
 <header>
-  <h1>🇯🇵 福岡 7天6夜攻略</h1>
-  <p>2026.7.21(二) – 7.27(一)｜4人｜博多駅前住宿</p>
+  <div class="kicker">Travel Journal · Kyushu</div>
+  <h1>福岡<span class="jp">FUKUOKA 7 DAYS</span></h1>
+  <div class="meta-row">
+    <span>📅 <b>2026.7.21 – 7.27</b></span>
+    <span>👥 <b>4 人同行</b></span>
+    <span>🏨 <b>博多駅前住宿</b></span>
+  </div>
+  <div class="rule"><span>❖</span></div>
 </header>
+
 <div class="wrap">
-  <div class="tabs" id="tabs"></div>
+  <div class="tabs-shell" id="tabsShell">
+    <div class="tabs" id="tabs"></div>
+  </div>
   <div id="content"></div>
 
-  <div class="budget">
-    <h3>📊 每人交通預算總覽</h3>
+  <div class="section-label">📊 每人交通預算</div>
+  <div class="panel">
     <table>
-      <tr><th>Day</th><th>內容</th><th>金額(日圓)</th></tr>
+      <tr><th>Day</th><th>內容</th><th>金額 (¥)</th></tr>
       <tr><td>1</td><td>機場地鐵+市區地鐵封頂</td><td>900</td></tr>
       <tr><td>2</td><td>地鐵刷卡上限封頂</td><td>640</td></tr>
       <tr><td>3</td><td>由布院之森往返</td><td>10,380</td></tr>
-      <tr><td>4</td><td>太宰府柳川套票3,620+地鐵</td><td>4,040</td></tr>
+      <tr><td>4</td><td>太宰府柳川套票 3,620+地鐵</td><td>4,040</td></tr>
       <tr><td>5</td><td>北九州周遊パス+新幹線往返</td><td>6,320</td></tr>
       <tr><td>6</td><td>地鐵刷卡上限封頂</td><td>640</td></tr>
-      <tr><td>7</td><td>計程車4人分攤</td><td>450</td></tr>
-      <tr><td colspan="2">合計(約台幣5,100)</td><td>約 23,370</td></tr>
+      <tr><td>7</td><td>計程車 4 人分攤</td><td>450</td></tr>
+      <tr><td colspan="2">合計（約台幣 5,100）</td><td>約 23,370</td></tr>
     </table>
-    <div class="warn" style="margin-top:12px;">💳 地鐵640日圓上限=「同一張卡+同一載具」單獨計算,4人各刷各的,手機與實體卡不能混用。</div>
+    <div class="warn" style="margin-top:14px;">💳 地鐵 640 円上限 =「同一張卡 + 同一載具」單獨計算,4 人各刷各的,手機與實體卡不能混用。</div>
   </div>
 
-  <div class="resv">
-    <h3>📋 預約清單(依急迫度)</h3>
+  <div class="section-label">📋 預約清單</div>
+  <div class="panel">
     <ol>
-      <li><b>由布院之森車票</b> — 乘車前1個月10:00開賣(6/23搶7/23車票),夏季秒殺</li>
-      <li><b>炉端ノいとおかし</b>(Day 2早午餐)— ☎ 092-406-8690</li>
-      <li><b>ベンジャミンランチ警固</b>(Day 4週五晚)— 必訂位</li>
-      <li><b>博多華味鳥 博多駅東店</b>(Day 2晚)— 建議預約</li>
-      <li><b>北九州周遊パス</b> — Pass Case網站購買,限VISA卡,4人各一張</li>
+      <li><b>由布院之森車票</b> — 乘車前 1 個月 10:00 開賣（6/23 搶 7/23 車票),夏季秒殺</li>
+      <li><b>炉端ノいとおかし</b>（Day 2 早午餐）— ☎ 092-406-8690</li>
+      <li><b>ベンジャミンランチ警固</b>（Day 4 週五晚）— 必訂位</li>
+      <li><b>博多華味鳥 博多駅東店</b>（Day 2 晚）— 建議預約</li>
+      <li><b>北九州周遊パス</b> — Pass Case 網站購買,限 VISA 卡,4 人各一張</li>
     </ol>
   </div>
 
-  <p class="note">點任一行程卡片可展開店家詳情與地圖連結。<br>交通資訊已逐段查證(2026年6月);出發前請再確認班次與營業狀況。</p>
+  <p class="note">點任一行程卡片可展開店家詳情與地圖連結。<br>交通資訊已逐段查證（2026 年 6 月）;出發前請再確認班次與營業狀況。</p>
+  <div class="footer-mark">❖ ❖ ❖</div>
 </div>
 
 <script>
@@ -260,18 +383,34 @@ const DAYS = [
 
 const tabsEl=document.getElementById("tabs"), contentEl=document.getElementById("content");
 let cur=0;
+const PACK_TAB=DAYS.length, SOUV_TAB=DAYS.length+1;
+function gotoTab(i){cur=i;render();window.scrollTo({top:0,behavior:"smooth"});}
 DAYS.forEach((d,i)=>{
-  const t=document.createElement("div");
+  const t=document.createElement("button");
   t.className="tab"+(i===0?" active":"");
-  t.innerHTML=`<b>${d.d}</b><small>${d.date}</small>`;
-  t.onclick=()=>{cur=i;render();window.scrollTo({top:0,behavior:"smooth"});};
+  t.innerHTML=`<span class="n">${d.d.replace('Day ','D')}</span><small>${d.date}</small>`;
+  t.onclick=()=>gotoTab(i);
+  tabsEl.appendChild(t);
+});
+[["🧳","行李",PACK_TAB],["🎁","伴手禮",SOUV_TAB]].forEach(([ic,lb,ix])=>{
+  const t=document.createElement("button");
+  t.className="tab tab-extra";
+  t.innerHTML=`<span class="n">${ic}</span><small>${lb}</small>`;
+  t.onclick=()=>gotoTab(ix);
   tabsEl.appendChild(t);
 });
 function render(){
   [...tabsEl.children].forEach((t,i)=>t.classList.toggle("active",i===cur));
+  const activeTab=tabsEl.children[cur];
+  if(activeTab) activeTab.scrollIntoView({behavior:"smooth",inline:"center",block:"nearest"});
+  if(cur===PACK_TAB){renderList("pack");return;}
+  if(cur===SOUV_TAB){renderList("souv");return;}
   const d=DAYS[cur];
-  let html=`<div class="day-title">${d.title}<span class="daypay">${d.pay}</span></div>
-            <div class="day-sub">${d.d}｜${d.date}</div><div class="timeline">`;
+  let html=`<div class="day-head">
+      <div class="day-index">${d.d} — ${d.date}</div>
+      <div class="day-title">${d.title}</div>
+      <div class="day-tags"><span class="tag pay">🚉 ${d.pay}</span></div>
+    </div><div class="timeline">`;
   d.items.forEach((it,idx)=>{
     if(it.tr){
       html+=`<div class="transit"><div class="tt">🚉 交通</div>${it.tr}</div>`;
@@ -279,12 +418,12 @@ function render(){
       const rows=(it.info||[]).map(r=>`<div class="row"><span class="ico">${r[0]}</span><span>${r[1]}</span></div>`).join("");
       const mapBtn=it.map?`<a class="map" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(it.map)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">📍 在 Google Maps 開啟</a>`:"";
       html+=`<div class="stop" id="s${cur}-${idx}">
+        <span class="dot"></span>
         <div class="card" onclick="toggle('s${cur}-${idx}')">
-          <span class="hint">點擊看詳情 ▾</span>
-          <div class="time">${it.time}</div>
+          <div class="top"><div class="time">${it.time}</div><span class="chev">▾</span></div>
           <div class="name">${it.name}</div>
           <div class="brief">${it.brief||""}</div>
-          <div class="detail">${rows}${mapBtn}</div>
+          <div class="detail"><div class="detail-inner">${rows}${mapBtn}</div></div>
         </div></div>`;
     }
   });
@@ -292,9 +431,125 @@ function render(){
   contentEl.innerHTML=html;
 }
 function toggle(id){document.getElementById(id).classList.toggle("open");}
-const tabsBar=document.getElementById("tabs");
-window.addEventListener("scroll",()=>{tabsBar.classList.toggle("stuck",window.scrollY>140);});
+const shell=document.getElementById("tabsShell");
+window.addEventListener("scroll",()=>{shell.classList.toggle("stuck",window.scrollY>170);});
 render();
+
+/* ---------- Packing checklist ---------- */
+const PACK=[
+  {cat:"🛂 證件 & 預約", items:[
+    ["護照（效期 6 個月以上）+ 影本"],
+    ["電子機票 / 登機證 截圖"],
+    ["飯店訂房確認信","博多駅前,16:00 後入住"],
+    ["由布院之森車票","乘車前 1 個月開賣搶票"],
+    ["太宰府柳川套票 / 北九州周遊パス","Pass 限 VISA 卡購買"],
+    ["餐廳訂位紀錄","華味鳥・いとおかし・若松屋・警固燒肉"]
+  ]},
+  {cat:"💴 錢 & 卡", items:[
+    ["VISA 信用卡","周遊パス只收 VISA,務必帶"],
+    ["現金日圓","中洲屋台多數只收現金"],
+    ["交通 IC 卡 / 手機 Suica","4 人各刷各的不能混用"],
+    ["零錢包","末日把零錢花在販賣機/扭蛋"]
+  ]},
+  {cat:"🔌 電子 3C", items:[
+    ["手機 + 充電線 + 行動電源"],
+    ["萬用轉接頭","日本為 A 型插座"],
+    ["網路:eSIM / WiFi 機","機場先確認領取"],
+    ["相機 / 記憶卡","門司港夜景・皿倉山"],
+    ["可摺疊購物袋 ×2","運河城、Yodobashi 掃貨"]
+  ]},
+  {cat:"☀️ 夏季衣物（7 月很熱）", items:[
+    ["輕薄透氣衣物 6-7 套"],
+    ["好走的鞋","湯之坪街道、天神逛整天"],
+    ["薄外套 / 防曬罩衫","皿倉山山頂風大、室內冷氣強"],
+    ["雨具(折傘 / 輕便雨衣)","屋台雨天不出攤"],
+    ["泳衣 / 替換衣","視住宿大浴場而定"]
+  ]},
+  {cat:"🧴 防曬 & 盥洗藥品", items:[
+    ["高係數防曬 + 補擦","柳川遊船 70 分曝曬"],
+    ["遮陽帽 / 太陽眼鏡"],
+    ["個人藥品(腸胃・止痛・OK繃)"],
+    ["保溫 / 保冷水壺","夏天隨時補水"],
+    ["保冷袋 / 保冷劑","努努雞炸雞需冷藏"]
+  ]},
+  {cat:"🎒 隨身小物", items:[
+    ["小包面紙 + 濕紙巾","部分廁所不附"],
+    ["環保餐具 / 牙籤","屋台用"],
+    ["夾鏈袋 / 小包裝袋","裝伴手禮、分裝"],
+    ["輕便後背包","一日遊隨身"],
+    ["手機行程連結(本網頁)","加到主畫面隨時查"]
+  ]}
+];
+const SOUV=[
+  {cat:"🍬 經典必買甜點", items:[
+    ["博多通りもん","奶油白豆沙饅頭,博多阪急 B1 / 機場"],
+    ["鶴乃子(石村萬盛堂)","老牌棉花糖包黃身餡銘菓"],
+    ["二鶴堂 博多の女","年輪蛋糕夾紅豆,超市・車站均有"],
+    ["ひよ子饅頭","小雞造型名菓,博多名物"]
+  ]},
+  {cat:"🐟 鹹食 & 明太子", items:[
+    ["辛子明太子(福さ屋/かねふく)","可買真空冷藏包,當日才買"],
+    ["努努雞(運河城)","冷食炸雞,Day 1 順買回飯店冰"],
+    ["茅乃舍高湯包","天神/機場有售,煮湯神器"],
+    ["梅枝餅(かさの家)","太宰府名物,現烤當天吃最佳"]
+  ]},
+  {cat:"🧁 在地限定 & 鮮食", items:[
+    ["B-Speak 瑞士卷","由布院限定,常完售要早買"],
+    ["金賞可樂餅","湯之坪街道現吃"],
+    ["當季白桃 / 葡萄","川端商店街・柳橋市場"],
+    ["門司港燒咖哩調理包","BEAR FRUITS 周邊店"]
+  ]},
+  {cat:"💊 藥妝 & 雜貨", items:[
+    ["藥妝(松本清/大國)","天神或博多站,免稅滿額退稅"],
+    ["蠟筆小新周邊","Fukuoka PARCO 官方店"],
+    ["任天堂周邊","Nintendo 福岡(PARCO)"],
+    ["無印 / Loft 文具雜貨","mina天神"]
+  ]},
+  {cat:"🛒 超市掃貨(最便宜)", items:[
+    ["泡麵・零食・調味料","MaxValu 祇園店(24h)"],
+    ["KitKat / 軟糖 等限定口味","超市・藥妝"],
+    ["伊藤園 / 在地飲料","超市補貨"]
+  ]}
+];
+const LISTS={
+  pack:{key:"fukuoka_pack_v1", kicker:"Checklist — 行前準備", title:"🧳 必帶物品清單", hint:"點擊勾選,進度自動記住", data:PACK},
+  souv:{key:"fukuoka_souv_v1", kicker:"Shopping — 伴手禮採購", title:"🎁 伴手禮清單", hint:"買到就打勾,進度自動記住", data:SOUV}
+};
+let curList=null;
+function listSaved(k){try{return JSON.parse(localStorage.getItem(k)||"{}");}catch(e){return {};}}
+function renderList(name){
+  curList=LISTS[name];
+  const saved=listSaved(curList.key);
+  let html=`<div class="day-head">
+      <div class="day-index">${curList.kicker}</div>
+      <div class="day-title">${curList.title}</div>
+      <div class="pack-head"><span style="font-size:.82rem;color:var(--sub);">${curList.hint}</span><span class="pack-progress" id="packProg">0 / 0</span></div>
+      <div class="pack-bar"><i id="packBar"></i></div>
+    </div>`;
+  curList.data.forEach((g,gi)=>{
+    html+=`<div class="pack-cat"><h4>${g.cat}<span class="ln"></span></h4>`;
+    g.items.forEach((it,ii)=>{
+      const id=gi+"-"+ii;
+      html+=`<div class="pack-item${saved[id]?" done":""}" data-id="${id}" onclick="togglePack(this)"><span class="pack-box"></span><span class="pack-txt"><b>${it[0]}</b>${it[1]?`<small>${it[1]}</small>`:""}</span></div>`;
+    });
+    html+=`</div>`;
+  });
+  html+=`<button class="pack-reset" onclick="resetList()">↺ 全部清除重來</button>`;
+  contentEl.innerHTML=html;
+  listPersist();
+}
+function listPersist(){
+  if(!curList) return;
+  const items=contentEl.querySelectorAll(".pack-item");
+  const map={}; let done=0;
+  items.forEach(r=>{const d=r.classList.contains("done"); map[r.dataset.id]=d; if(d)done++;});
+  try{localStorage.setItem(curList.key,JSON.stringify(map));}catch(e){}
+  const prog=document.getElementById("packProg"), bar=document.getElementById("packBar");
+  if(prog) prog.textContent=done+" / "+items.length;
+  if(bar) bar.style.width=(items.length?Math.round(done/items.length*100):0)+"%";
+}
+function togglePack(el){el.classList.toggle("done");listPersist();}
+function resetList(){contentEl.querySelectorAll(".pack-item.done").forEach(r=>r.classList.remove("done"));listPersist();}
 </script>
 </body>
 </html>
