@@ -134,7 +134,7 @@
   .card .brief{color:var(--sub); font-size:.86rem; margin-top:4px; font-weight:300;}
 
   .detail{max-height:0; overflow:hidden; transition:max-height .35s ease; }
-  .stop.open .detail{max-height:900px;}
+  .stop.open .detail{max-height:6000px;}
   .detail-inner{margin-top:14px; padding-top:14px; border-top:1px solid var(--line);}
   .detail .row{display:flex; gap:10px; margin-bottom:9px; font-size:.86rem; align-items:flex-start;}
   .detail .row .ico{flex:0 0 20px; text-align:center; opacity:.9;}
@@ -207,6 +207,35 @@
   .add-item{margin-top:8px; width:100%; text-align:left; background:none; border:1px dashed var(--line); border-radius:7px; padding:9px 13px; color:var(--sub); font-size:.82rem; cursor:pointer; font-family:var(--sans); transition:.15s;}
   .add-item:hover{border-color:var(--accent); color:var(--accent); background:#fff7f1;}
   #syncBadge{color:var(--green); font-weight:500;}
+  /* memory: rating / photos / comments */
+  .memory{margin-top:14px; padding-top:14px; border-top:1px dashed var(--line);}
+  .mem-h{font-family:var(--serif); font-weight:700; font-size:.92rem; margin-bottom:8px;}
+  .stars{font-size:1.3rem; line-height:1; display:flex; align-items:center; gap:3px; margin-bottom:12px;}
+  .stars .star{color:#dcd5c6; cursor:pointer; transition:.12s;}
+  .stars .star.on{color:#e0a82e;}
+  .stars .star:hover{transform:scale(1.15);}
+  .stars .rate-num{font-size:.74rem; color:var(--sub); margin-left:8px; font-family:var(--sans);}
+  .ph-grid{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px;}
+  .ph-grid .ph{position:relative; width:84px; height:84px; border-radius:8px; overflow:hidden; border:1px solid var(--line);}
+  .ph-grid .ph img{width:100%; height:100%; object-fit:cover; cursor:pointer; display:block;}
+  .ph-grid .ph button{position:absolute; top:3px; right:3px; width:20px; height:20px; border:none; border-radius:50%; background:rgba(0,0,0,.55); color:#fff; font-size:.66rem; cursor:pointer; line-height:1;}
+  .ph-add{width:84px; height:84px; border:1px dashed var(--line); border-radius:8px; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:2px; font-size:.74rem; color:var(--sub); cursor:pointer; text-align:center; transition:.15s;}
+  .ph-add:hover{border-color:var(--accent); color:var(--accent); background:#fff7f1;}
+  .ph-add input{display:none;}
+  .cmts{display:flex; flex-direction:column; gap:7px; margin-bottom:10px;}
+  .cmt{position:relative; background:var(--chip); border-radius:9px; padding:8px 30px 8px 11px; font-size:.85rem;}
+  .cmt b{color:var(--accent); font-weight:700; margin-right:6px;}
+  .cmt button{position:absolute; top:6px; right:7px; border:none; background:none; color:#bbb; cursor:pointer; font-size:.7rem;}
+  .cmt button:hover{color:var(--accent);}
+  .cmt-form{display:flex; gap:6px; flex-wrap:wrap;}
+  .cmt-form input{font-family:var(--sans); font-size:.84rem; border:1px solid var(--line); border-radius:8px; padding:8px 10px; background:var(--paper); color:var(--ink);}
+  .cmt-form .cmt-name{flex:0 0 84px; width:84px;}
+  .cmt-form .cmt-text{flex:1; min-width:120px;}
+  .cmt-form input:focus{outline:none; border-color:var(--accent);}
+  .cmt-form button{flex:0 0 auto; border:none; background:var(--accent); color:#fff; border-radius:8px; padding:8px 16px; font-size:.82rem; cursor:pointer;}
+  .cmt-form button:hover{background:#822117;}
+  .lightbox{position:fixed; inset:0; background:rgba(20,18,15,.88); z-index:200; display:flex; align-items:center; justify-content:center; padding:20px; cursor:zoom-out;}
+  .lightbox img{max-width:100%; max-height:100%; border-radius:8px; box-shadow:0 10px 40px rgba(0,0,0,.5);}
 </style>
 </head>
 <body>
@@ -462,14 +491,18 @@ function render(){
           <div class="top"><div class="time">${it.time}</div><span class="chev">▾</span></div>
           <div class="name">${it.name}</div>
           <div class="brief">${it.brief||""}</div>
-          <div class="detail"><div class="detail-inner">${rows}${mapBtn}</div></div>
+          <div class="detail"><div class="detail-inner">${rows}${mapBtn}<div class="memory" id="mem_d${cur}_${idx}" data-sid="d${cur}_${idx}" onclick="event.stopPropagation()"></div></div></div>
         </div></div>`;
     }
   });
   html+=`</div>`;
   contentEl.innerHTML=html;
 }
-function toggle(id){document.getElementById(id).classList.toggle("open");}
+function toggle(id){
+  const el=document.getElementById(id);
+  const open=el.classList.toggle("open");
+  if(open){ const mem=el.querySelector(".memory"); if(mem) loadMemory(mem.dataset.sid); }
+}
 const shell=document.getElementById("tabsShell");
 window.addEventListener("scroll",()=>{shell.classList.toggle("stuck",window.scrollY>170);});
 render();
@@ -656,6 +689,88 @@ function addItem(list,cat){
   const obj={cat:cat, name:"新項目", note:"", done:false, order:Date.now()};
   if(fbReady){ db.ref("fukuoka/"+list).push(obj); }
   else{ if(!listData[list])listData[list]={}; listData[list][newId()]=obj; lsSave(list); renderList(list); }
+}
+
+/* ---------- Memories: rating / photos / comments per stop ---------- */
+const memAttached=new Set();
+function memLsKey(sid){return "fukuoka_mem_"+sid;}
+function memLsLoad(sid){try{return JSON.parse(localStorage.getItem(memLsKey(sid)))||{};}catch(e){return {};}}
+function memLsSave(sid,m){try{localStorage.setItem(memLsKey(sid),JSON.stringify(m));}catch(e){}}
+function loadMemory(sid){
+  if(fbReady){
+    db.ref("fukuoka/memories/"+sid).once("value").then(s=>renderMemory(sid,s.val()||{}));
+    if(!memAttached.has(sid)){ memAttached.add(sid); db.ref("fukuoka/memories/"+sid).on("value",s=>renderMemory(sid,s.val()||{})); }
+  } else { renderMemory(sid, memLsLoad(sid)); }
+}
+function renderMemory(sid,m){
+  const el=document.getElementById("mem_"+sid); if(!el) return;
+  m=m||{}; const rating=m.rating||0, photos=m.photos||{}, comments=m.comments||{};
+  let stars="";
+  for(let i=1;i<=5;i++) stars+=`<span class="star${i<=rating?" on":""}" onclick="setRating('${sid}',${i})">★</span>`;
+  let pg="";
+  Object.keys(photos).forEach(pid=>{ pg+=`<div class="ph"><img src="${photos[pid].data}" data-pid="${pid}" onclick="viewPhoto(this)"><button title="刪除" onclick="delPhoto('${sid}','${pid}')">✕</button></div>`; });
+  let cl="";
+  Object.keys(comments).sort((a,b)=>(comments[a].ts||0)-(comments[b].ts||0)).forEach(cid=>{ const c=comments[cid]||{}; cl+=`<div class="cmt"><b>${esc(c.name||"匿名")}</b><span>${esc(c.text||"")}</span><button title="刪除" onclick="delComment('${sid}','${cid}')">✕</button></div>`; });
+  const myName=escAttr(localStorage.getItem("fukuoka_name")||"");
+  el.innerHTML=`
+    <div class="mem-h">📝 回憶 &amp; 評分</div>
+    <div class="stars">${stars}<span class="rate-num">${rating?rating+" / 5":"點星評分"}</span></div>
+    <div class="ph-grid">${pg}<label class="ph-add">＋ 照片<input type="file" accept="image/*" onchange="addPhoto('${sid}',this)"></label></div>
+    <div class="cmts">${cl}</div>
+    <div class="cmt-form">
+      <input class="cmt-name" id="cn_${sid}" placeholder="名字" value="${myName}">
+      <input class="cmt-text" id="ct_${sid}" placeholder="寫下心得…" onkeydown="if(event.key==='Enter')addComment('${sid}')">
+      <button onclick="addComment('${sid}')">送出</button>
+    </div>`;
+}
+function setRating(sid,n){
+  if(fbReady){ db.ref("fukuoka/memories/"+sid+"/rating").set(n); }
+  else{ const m=memLsLoad(sid); m.rating=n; memLsSave(sid,m); renderMemory(sid,m); }
+}
+function addComment(sid){
+  const nameEl=document.getElementById("cn_"+sid), textEl=document.getElementById("ct_"+sid);
+  const name=(nameEl.value||"匿名").trim()||"匿名", text=(textEl.value||"").trim();
+  if(!text) return;
+  try{localStorage.setItem("fukuoka_name",name);}catch(e){}
+  const obj={name:name, text:text, ts:Date.now()};
+  if(fbReady){ db.ref("fukuoka/memories/"+sid+"/comments").push(obj); textEl.value=""; }
+  else{ const m=memLsLoad(sid); m.comments=m.comments||{}; m.comments[newId()]=obj; memLsSave(sid,m); renderMemory(sid,m); }
+}
+function delComment(sid,cid){
+  if(!confirm("刪除這則留言?")) return;
+  if(fbReady){ db.ref("fukuoka/memories/"+sid+"/comments/"+cid).remove(); }
+  else{ const m=memLsLoad(sid); if(m.comments)delete m.comments[cid]; memLsSave(sid,m); renderMemory(sid,m); }
+}
+function addPhoto(sid,input){
+  const f=input.files&&input.files[0]; if(!f) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const img=new Image();
+    img.onload=()=>{
+      const max=1100; let w=img.width,h=img.height;
+      if(w>h && w>max){ h=Math.round(h*max/w); w=max; } else if(h>=w && h>max){ w=Math.round(w*max/h); h=max; }
+      const c=document.createElement("canvas"); c.width=w; c.height=h;
+      c.getContext("2d").drawImage(img,0,0,w,h);
+      let data; try{ data=c.toDataURL("image/jpeg",0.7); }catch(err){ alert("這張照片無法處理"); return; }
+      const obj={data:data, ts:Date.now()};
+      if(fbReady){ db.ref("fukuoka/memories/"+sid+"/photos").push(obj); }
+      else{ const m=memLsLoad(sid); m.photos=m.photos||{}; m.photos[newId()]=obj; memLsSave(sid,m); renderMemory(sid,m); }
+    };
+    img.src=e.target.result;
+  };
+  reader.readAsDataURL(f);
+  input.value="";
+}
+function delPhoto(sid,pid){
+  if(!confirm("刪除這張照片?")) return;
+  if(fbReady){ db.ref("fukuoka/memories/"+sid+"/photos/"+pid).remove(); }
+  else{ const m=memLsLoad(sid); if(m.photos)delete m.photos[pid]; memLsSave(sid,m); renderMemory(sid,m); }
+}
+function viewPhoto(imgEl){
+  const lb=document.createElement("div"); lb.className="lightbox";
+  const big=document.createElement("img"); big.src=imgEl.src; lb.appendChild(big);
+  lb.onclick=()=>lb.remove();
+  document.body.appendChild(lb);
 }
 
 initFirebase();
