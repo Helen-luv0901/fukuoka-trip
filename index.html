@@ -7,6 +7,21 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600;700;800&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<!-- Firebase(即時多人同步)-->
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
+<script>
+  // ↓↓↓ 在 Firebase 主控台建立專案後,把設定貼到這裡(空白時自動改用本機儲存)
+  window.FIREBASE_CONFIG = {
+    apiKey: "AIzaSyBwOAAIy_cHElrExEB5EOyGVIACaItIQ2I",
+    authDomain: "fukuoka-trip-7618f.firebaseapp.com",
+    databaseURL: "https://fukuoka-trip-7618f-default-rtdb.firebaseio.com",
+    projectId: "fukuoka-trip-7618f",
+    storageBucket: "fukuoka-trip-7618f.firebasestorage.app",
+    messagingSenderId: "620056295448",
+    appId: "1:620056295448:web:964502cd3428fdde34eb6d"
+  };
+</script>
 <style>
   :root{
     --bg:#f4f1ea;          /* warm ivory */
@@ -169,6 +184,18 @@
   .pack-item.done .pack-txt{color:var(--sub); text-decoration:line-through; text-decoration-color:var(--line);}
   .pack-reset{display:inline-block; margin-top:14px; font-size:.76rem; color:var(--sub); background:none; border:1px solid var(--line); border-radius:999px; padding:5px 14px; cursor:pointer; font-family:var(--sans); transition:.15s;}
   .pack-reset:hover{color:var(--accent); border-color:var(--accent);}
+  /* editable list controls */
+  .pack-item{cursor:default;}
+  .pack-box{cursor:pointer;}
+  .pack-txt{flex:1; min-width:0;}
+  .pack-txt b[contenteditable], .pack-txt small[contenteditable]{outline:none; cursor:text; border-radius:4px; padding:1px 3px; display:inline-block; min-width:40px;}
+  .pack-txt b[contenteditable]:focus, .pack-txt small[contenteditable]:focus{background:#fff7f1; box-shadow:0 0 0 2px var(--accent-soft);}
+  .ce-note:empty:before{content:attr(data-ph); color:#c7c0b2;}
+  .item-del{flex:0 0 24px; width:24px; height:24px; border:none; background:none; color:#c7c0b2; cursor:pointer; font-size:.78rem; border-radius:50%; transition:.15s; align-self:center;}
+  .item-del:hover{background:var(--accent-soft); color:var(--accent);}
+  .add-item{margin-top:8px; width:100%; text-align:left; background:none; border:1px dashed var(--line); border-radius:7px; padding:9px 13px; color:var(--sub); font-size:.82rem; cursor:pointer; font-family:var(--sans); transition:.15s;}
+  .add-item:hover{border-color:var(--accent); color:var(--accent); background:#fff7f1;}
+  #syncBadge{color:var(--green); font-weight:500;}
 </style>
 </head>
 <body>
@@ -512,44 +539,114 @@ const SOUV=[
   ]}
 ];
 const LISTS={
-  pack:{key:"fukuoka_pack_v1", kicker:"Checklist — 行前準備", title:"🧳 必帶物品清單", hint:"點擊勾選,進度自動記住", data:PACK},
-  souv:{key:"fukuoka_souv_v1", kicker:"Shopping — 伴手禮採購", title:"🎁 伴手禮清單", hint:"買到就打勾,進度自動記住", data:SOUV}
+  pack:{kicker:"Checklist — 行前準備", title:"🧳 必帶物品清單", hint:"點圈勾選;文字可直接點擊編輯,✕ 刪除,＋ 新增"},
+  souv:{kicker:"Shopping — 伴手禮採購", title:"🎁 伴手禮清單", hint:"點圈勾選;文字可直接點擊編輯,✕ 刪除,＋ 新增"}
 };
-let curList=null;
-function listSaved(k){try{return JSON.parse(localStorage.getItem(k)||"{}");}catch(e){return {};}}
-function renderList(name){
-  curList=LISTS[name];
-  const saved=listSaved(curList.key);
-  let html=`<div class="day-head">
-      <div class="day-index">${curList.kicker}</div>
-      <div class="day-title">${curList.title}</div>
-      <div class="pack-head"><span style="font-size:.82rem;color:var(--sub);">${curList.hint}</span><span class="pack-progress" id="packProg">0 / 0</span></div>
-      <div class="pack-bar"><i id="packBar"></i></div>
-    </div>`;
-  curList.data.forEach((g,gi)=>{
-    html+=`<div class="pack-cat"><h4>${g.cat}<span class="ln"></span></h4>`;
-    g.items.forEach((it,ii)=>{
-      const id=gi+"-"+ii;
-      html+=`<div class="pack-item${saved[id]?" done":""}" data-id="${id}" onclick="togglePack(this)"><span class="pack-box"></span><span class="pack-txt"><b>${it[0]}</b>${it[1]?`<small>${it[1]}</small>`:""}</span></div>`;
+const SEED={pack:PACK, souv:SOUV};
+const CAT_ORDER={pack:PACK.map(g=>g.cat), souv:SOUV.map(g=>g.cat)};
+let curListName=null, db=null, fbReady=false;
+let listData={pack:null, souv:null};
+
+function esc(s){return (s||"").toString().replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function escAttr(s){return esc(s).replace(/'/g,"&#39;").replace(/"/g,"&quot;");}
+function newId(){return "i"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+
+function seedMap(list){
+  const m={};
+  (SEED[list]||[]).forEach((g,gi)=>g.items.forEach((it,ii)=>{
+    m["s"+gi+"_"+ii]={cat:g.cat, name:it[0], note:it[1]||"", done:false, order:gi*100+ii};
+  }));
+  return m;
+}
+function lsKey(list){return "fukuoka_list_"+list;}
+function lsLoad(list){
+  try{const v=JSON.parse(localStorage.getItem(lsKey(list))); if(v&&typeof v==="object") return v;}catch(e){}
+  const m=seedMap(list); try{localStorage.setItem(lsKey(list),JSON.stringify(m));}catch(e){} return m;
+}
+function lsSave(list){try{localStorage.setItem(lsKey(list),JSON.stringify(listData[list]||{}));}catch(e){}}
+
+function initFirebase(){
+  if(!window.FIREBASE_CONFIG||!window.FIREBASE_CONFIG.apiKey||!window.firebase){return false;}
+  try{
+    firebase.initializeApp(window.FIREBASE_CONFIG);
+    db=firebase.database(); fbReady=true;
+    ["pack","souv"].forEach(list=>{
+      db.ref("fukuoka/"+list).on("value",snap=>{
+        const v=snap.val();
+        if(v===null){ db.ref("fukuoka/"+list).set(seedMap(list)); return; }
+        listData[list]=v;
+        if(curListName===list) renderList(list);
+      });
     });
-    html+=`</div>`;
+    return true;
+  }catch(e){console.error("Firebase init failed",e); fbReady=false; return false;}
+}
+
+function renderList(name){
+  curListName=name;
+  const cfg=LISTS[name];
+  if(listData[name]===null){
+    if(fbReady){ contentEl.innerHTML='<div class="day-head"><div class="day-title">'+cfg.title+'</div><p class="note" style="margin-top:18px;">載入中…☁</p></div>'; return; }
+    listData[name]=lsLoad(name);
+  }
+  const data=listData[name]||{};
+  const cats=[...CAT_ORDER[name]];
+  const groups={}; cats.forEach(c=>groups[c]=[]);
+  Object.keys(data).forEach(id=>{
+    const it=data[id]||{}; const c=it.cat||"其他";
+    if(!groups[c]){groups[c]=[]; cats.push(c);}
+    groups[c].push(Object.assign({id:id},it));
   });
-  html+=`<button class="pack-reset" onclick="resetList()">↺ 全部清除重來</button>`;
+  let total=0, done=0;
+  cats.forEach(c=>(groups[c]||[]).forEach(it=>{total++; if(it.done)done++;}));
+  const pct=total?Math.round(done/total*100):0;
+  const badge=fbReady?'<span id="syncBadge">已連雲端 ☁ 即時同步</span>':'<span style="color:var(--sub);">本機儲存(未連雲端)</span>';
+  let html=`<div class="day-head">
+      <div class="day-index">${cfg.kicker} · ${badge}</div>
+      <div class="day-title">${cfg.title}</div>
+      <div class="pack-head"><span style="font-size:.82rem;color:var(--sub);">${cfg.hint}</span><span class="pack-progress">${done} / ${total}</span></div>
+      <div class="pack-bar"><i style="width:${pct}%"></i></div>
+    </div>`;
+  cats.forEach(c=>{
+    const items=(groups[c]||[]).sort((a,b)=>(a.order||0)-(b.order||0));
+    html+=`<div class="pack-cat"><h4>${esc(c)}<span class="ln"></span></h4>`;
+    items.forEach(it=>{
+      html+=`<div class="pack-item${it.done?" done":""}">
+        <span class="pack-box" onclick="toggleItem('${name}','${it.id}',${it.done?"false":"true"})"></span>
+        <span class="pack-txt">
+          <b contenteditable="true" spellcheck="false" onblur="editItem('${name}','${it.id}','name',this.innerText)">${esc(it.name)}</b>
+          <small class="ce-note" contenteditable="true" spellcheck="false" data-ph="加註明…" onblur="editItem('${name}','${it.id}','note',this.innerText)">${esc(it.note||"")}</small>
+        </span>
+        <button class="item-del" title="刪除" onclick="delItem('${name}','${it.id}')">✕</button>
+      </div>`;
+    });
+    html+=`<button class="add-item" onclick="addItem('${name}','${escAttr(c)}')">＋ 新增項目</button></div>`;
+  });
   contentEl.innerHTML=html;
-  listPersist();
 }
-function listPersist(){
-  if(!curList) return;
-  const items=contentEl.querySelectorAll(".pack-item");
-  const map={}; let done=0;
-  items.forEach(r=>{const d=r.classList.contains("done"); map[r.dataset.id]=d; if(d)done++;});
-  try{localStorage.setItem(curList.key,JSON.stringify(map));}catch(e){}
-  const prog=document.getElementById("packProg"), bar=document.getElementById("packBar");
-  if(prog) prog.textContent=done+" / "+items.length;
-  if(bar) bar.style.width=(items.length?Math.round(done/items.length*100):0)+"%";
+
+function toggleItem(list,id,val){
+  val=(val===true||val==="true");
+  if(fbReady){ db.ref("fukuoka/"+list+"/"+id+"/done").set(val); }
+  else if(listData[list]&&listData[list][id]){ listData[list][id].done=val; lsSave(list); renderList(list); }
 }
-function togglePack(el){el.classList.toggle("done");listPersist();}
-function resetList(){contentEl.querySelectorAll(".pack-item.done").forEach(r=>r.classList.remove("done"));listPersist();}
+function editItem(list,id,field,text){
+  text=(text||"").replace(/^\s+|\s+$/g,"");
+  if(fbReady){ db.ref("fukuoka/"+list+"/"+id+"/"+field).set(text); }
+  else if(listData[list]&&listData[list][id]){ listData[list][id][field]=text; lsSave(list); }
+}
+function delItem(list,id){
+  if(!confirm("確定刪除這一項?")) return;
+  if(fbReady){ db.ref("fukuoka/"+list+"/"+id).remove(); }
+  else if(listData[list]){ delete listData[list][id]; lsSave(list); renderList(list); }
+}
+function addItem(list,cat){
+  const obj={cat:cat, name:"新項目", note:"", done:false, order:Date.now()};
+  if(fbReady){ db.ref("fukuoka/"+list).push(obj); }
+  else{ if(!listData[list])listData[list]={}; listData[list][newId()]=obj; lsSave(list); renderList(list); }
+}
+
+initFirebase();
 </script>
 </body>
 </html>
