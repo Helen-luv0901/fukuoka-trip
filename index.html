@@ -247,6 +247,27 @@
   .weather .wx-t{color:var(--ink);}
   .weather .wx-p{color:var(--transit);}
   .weather .wx-src{font-size:.7rem; color:var(--sub); margin-left:auto;}
+  /* print button + printable itinerary */
+  .print-btn{margin-top:20px; background:transparent; border:1px solid var(--accent); color:var(--accent); font-family:var(--sans); font-size:.82rem; letter-spacing:.04em; padding:8px 20px; border-radius:999px; cursor:pointer; transition:.15s;}
+  .print-btn:hover{background:var(--accent); color:#fff;}
+  #printArea{display:none;}
+  @media print{
+    header, .wrap{display:none !important;}
+    #printArea{display:block !important; color:#000; font-family:"Noto Sans TC",sans-serif;}
+    #printArea .p-head{text-align:center; margin-bottom:10pt;}
+    #printArea .p-head h1{font-family:"Shippori Mincho",serif; font-size:18pt; margin:0;}
+    #printArea .p-head p{font-size:9pt; color:#333; margin:3pt 0 0;}
+    #printArea .p-day{page-break-inside:avoid; margin:0 0 9pt; padding-bottom:6pt; border-bottom:1px solid #bbb;}
+    #printArea .p-day h2{font-size:12.5pt; margin:8pt 0 1pt; border-left:3px solid #9c3024; padding-left:6pt;}
+    #printArea .p-day h2 span{font-size:9pt; color:#9c3024; font-weight:400;}
+    #printArea .p-title{font-size:9.5pt; color:#555; margin:0 0 4pt 6pt;}
+    #printArea ul{list-style:none; margin:0; padding:0 0 0 6pt;}
+    #printArea li{font-size:10pt; line-height:1.45; margin:1.5pt 0;}
+    #printArea li.p-stop b{display:inline-block; min-width:82pt;}
+    #printArea li.p-tr{color:#555; font-size:8.5pt; padding-left:12pt;}
+    #printArea .p-brief{color:#666; font-size:9pt;}
+    @page{margin:14mm;}
+  }
 </style>
 </head>
 <body>
@@ -259,6 +280,7 @@
     <span>🏨 <b>玉井親和民宿</b></span>
   </div>
   <div class="rule"><span>❖</span></div>
+  <button class="print-btn" onclick="printItinerary()">🖨 列印每日行程</button>
 </header>
 
 <div class="wrap">
@@ -306,6 +328,8 @@
   <div class="footer-mark">❖ ❖ ❖</div>
   <p class="credit">頭圖:百道濱海濱公園與福岡塔｜Photo by Jakub Hałun, <a href="https://commons.wikimedia.org/wiki/File:20100718_Fukuoka_2870.jpg" target="_blank" rel="noopener">Wikimedia Commons</a>, CC BY-SA 4.0</p>
 </div>
+
+<div id="printArea"></div>
 
 <script>
 const DAYS = [
@@ -851,6 +875,21 @@ function fetchWeather(){
     d.time.forEach((t,k)=>{ WX[t]={code:d.weather_code[k], tmax:d.temperature_2m_max[k], tmin:d.temperature_2m_min[k], pop:d.precipitation_probability_max?d.precipitation_probability_max[k]:null}; });
     if(cur<DAYS.length){ const el=document.getElementById("wxbar"); if(el) el.innerHTML=weatherHtml(cur); }
   }).catch(e=>{});
+}
+
+function printItinerary(){
+  const pa=document.getElementById("printArea");
+  let h=`<div class="p-head"><h1>福岡 7天6夜行程　2026.7.21 – 7.27</h1><p>4 人・住宿:玉井親和民宿(博多區博多駅前 3-12-3)</p></div>`;
+  DAYS.forEach(d=>{
+    h+=`<div class="p-day"><h2>${d.d}　${d.date}　<span>${d.pay}</span></h2><div class="p-title">${esc(d.title)}</div><ul>`;
+    d.items.forEach(it=>{
+      if(it.tr){ h+=`<li class="p-tr">${esc(it.tr)}</li>`; }
+      else{ h+=`<li class="p-stop"><b>${esc(it.time)}</b>${esc(it.name)}${it.brief?`<span class="p-brief"> — ${esc(it.brief)}</span>`:""}</li>`; }
+    });
+    h+=`</ul></div>`;
+  });
+  pa.innerHTML=h;
+  window.print();
 }
 
 initFirebase();
