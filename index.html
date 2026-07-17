@@ -247,6 +247,27 @@
   .weather .wx-t{color:var(--ink);}
   .weather .wx-p{color:var(--transit);}
   .weather .wx-src{font-size:.7rem; color:var(--sub); margin-left:auto;}
+  /* editable itinerary */
+  .edit-day-btn{margin-left:auto; background:transparent; border:1px solid var(--gold); color:var(--gold); font-size:.74rem; padding:4px 13px; border-radius:999px; cursor:pointer; font-family:var(--sans); transition:.15s;}
+  .edit-day-btn:hover{background:var(--gold); color:#fff;}
+  .edit-day-btn.done{border-color:var(--accent); color:var(--accent);}
+  .ed-title{width:100%; box-sizing:border-box; font-family:var(--serif); font-size:1.2rem; font-weight:700; border:none; border-bottom:1px solid var(--line); background:transparent; color:var(--ink); padding:5px 2px; margin:4px 0 6px;}
+  .ed-title:focus{outline:none; border-bottom-color:var(--accent);}
+  .ed-list{display:flex; flex-direction:column; gap:10px; margin-top:14px;}
+  .ed-item{background:var(--paper); border:1px solid var(--line); border-radius:9px; padding:10px 12px;}
+  .ed-item.ed-tr{background:var(--chip);}
+  .ed-row1{display:flex; align-items:center; gap:8px; margin-bottom:5px;}
+  .ed-badge{font-size:.72rem; color:var(--transit); font-weight:700;}
+  .ed-ctrl{margin-left:auto; display:flex; gap:5px;}
+  .ed-mv,.ed-del{width:28px; height:28px; border:1px solid var(--line); background:#fff; border-radius:6px; cursor:pointer; font-size:.82rem; color:var(--sub); transition:.15s;}
+  .ed-mv:hover{border-color:var(--gold); color:var(--gold);}
+  .ed-del:hover{border-color:var(--accent); color:var(--accent);}
+  .ed-item input,.ed-item textarea{width:100%; box-sizing:border-box; font-family:var(--sans); font-size:.86rem; border:1px solid var(--line); border-radius:6px; padding:7px 9px; margin:3px 0; background:#fff; color:var(--ink); resize:vertical;}
+  .ed-item .ed-time{max-width:200px;}
+  .ed-item input:focus,.ed-item textarea:focus{outline:none; border-color:var(--accent);}
+  .ed-add{display:flex; gap:8px; margin-top:12px;}
+  .ed-add button{flex:1; border:1px dashed var(--line); background:none; border-radius:8px; padding:11px; color:var(--sub); cursor:pointer; font-family:var(--sans); font-size:.84rem; transition:.15s;}
+  .ed-add button:hover{border-color:var(--accent); color:var(--accent); background:#fff7f1;}
   /* print button + printable itinerary */
   .print-btn{margin-top:20px; background:transparent; border:1px solid var(--accent); color:var(--accent); font-family:var(--sans); font-size:.82rem; letter-spacing:.04em; padding:8px 20px; border-radius:999px; cursor:pointer; transition:.15s;}
   .print-btn:hover{background:var(--accent); color:#fff;}
@@ -539,26 +560,28 @@ function render(){
   if(activeTab) activeTab.scrollIntoView({behavior:"smooth",inline:"center",block:"nearest"});
   if(cur===PACK_TAB){renderList("pack");return;}
   if(cur===SOUV_TAB){renderList("souv");return;}
-  const d=DAYS[cur];
+  if(editMode){ renderDayEdit(cur); return; }
+  const d=(ITIN&&ITIN[cur])?ITIN[cur]:DAYS[cur];
   let html=`<div class="day-head">
       <div class="day-index">${d.d} — ${d.date}</div>
-      <div class="day-title">${d.title}</div>
-      <div class="day-tags"><span class="tag pay">🚉 ${d.pay}</span></div>
+      <div class="day-title">${esc(d.title)}</div>
+      <div class="day-tags"><span class="tag pay">🚉 ${esc(d.pay)}</span><button class="edit-day-btn" onclick="toggleDayEdit()">✏️ 編輯此日</button></div>
       <div class="weather" id="wxbar">${weatherHtml(cur)}</div>
     </div><div class="timeline">`;
   d.items.forEach((it,idx)=>{
-    if(it.tr){
-      html+=`<div class="transit"><div class="tt">🚉 交通</div>${it.tr}</div>`;
+    if(it.tr || it.type==="tr"){
+      html+=`<div class="transit"><div class="tt">🚉 交通</div>${esc(it.tr||it.text||"")}</div>`;
     }else{
-      const rows=(it.info||[]).map(r=>`<div class="row"><span class="ico">${r[0]}</span><span>${r[1]}</span></div>`).join("");
+      const sid=it.id||("d"+cur+"_"+idx);
+      const rows=(it.info||[]).map(r=>`<div class="row"><span class="ico">${r[0]||"•"}</span><span>${esc(r[1]||"")}</span></div>`).join("");
       const mapBtn=it.map?`<a class="map" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(it.map)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">📍 在 Google Maps 開啟</a>`:"";
       html+=`<div class="stop" id="s${cur}-${idx}">
         <span class="dot"></span>
         <div class="card" onclick="toggle('s${cur}-${idx}')">
-          <div class="top"><div class="time">${it.time}</div><span class="chev">▾</span></div>
-          <div class="name">${it.name}</div>
-          <div class="brief">${it.brief||""}</div>
-          <div class="detail"><div class="detail-inner">${rows}${mapBtn}<div class="memory" id="mem_d${cur}_${idx}" data-sid="d${cur}_${idx}" onclick="event.stopPropagation()"></div></div></div>
+          <div class="top"><div class="time">${esc(it.time||"")}</div><span class="chev">▾</span></div>
+          <div class="name">${esc(it.name||"")}</div>
+          <div class="brief">${esc(it.brief||"")}</div>
+          <div class="detail"><div class="detail-inner">${rows}${mapBtn}<div class="memory" id="mem_${sid}" data-sid="${sid}" onclick="event.stopPropagation()"></div></div></div>
         </div></div>`;
     }
   });
@@ -570,6 +593,60 @@ function toggle(id){
   const open=el.classList.toggle("open");
   if(open){ const mem=el.querySelector(".memory"); if(mem) loadMemory(mem.dataset.sid); }
 }
+
+/* ---------- Editable itinerary (Firebase, shared) ---------- */
+var ITIN=null, editMode=false;
+function seedItin(){
+  return DAYS.map((d,di)=>({
+    d:d.d, date:d.date, title:d.title, pay:d.pay,
+    items:d.items.map((it,ii)=> it.tr
+      ? {type:"tr", text:it.tr}
+      : {type:"stop", id:"d"+di+"_"+ii, time:it.time||"", name:it.name||"", brief:it.brief||"", map:it.map||"", info:it.info||[]})
+  }));
+}
+function itinLocalLoad(){ try{const v=JSON.parse(localStorage.getItem("fukuoka_itin")); if(v&&v.length) return v;}catch(e){} const s=seedItin(); try{localStorage.setItem("fukuoka_itin",JSON.stringify(s));}catch(e){} return s; }
+function ensureItin(){ if(!ITIN) ITIN = fbReady ? seedItin() : itinLocalLoad(); return ITIN; }
+function saveItin(){ if(fbReady){ db.ref("fukuoka/itinerary").set(ITIN); } else { try{localStorage.setItem("fukuoka_itin",JSON.stringify(ITIN));}catch(e){} } }
+function toggleDayEdit(){ editMode=!editMode; if(editMode) ensureItin(); render(); window.scrollTo({top:0,behavior:"smooth"}); }
+function edMove(di,ii){ return `<button class="ed-mv" title="上移" onclick="itinMove(${di},${ii},-1)">↑</button><button class="ed-mv" title="下移" onclick="itinMove(${di},${ii},1)">↓</button>`; }
+function renderDayEdit(di){
+  ensureItin();
+  const d=ITIN[di];
+  let h=`<div class="day-head">
+      <div class="day-index">${d.d} — ${d.date}　·　✏️ 編輯模式</div>
+      <input class="ed-title" value="${escAttr(d.title)}" onchange="itinSet(${di},'title',this.value)">
+      <div class="day-tags"><span class="tag pay">🚉 ${escAttr(d.pay)}</span><button class="edit-day-btn done" onclick="toggleDayEdit()">✓ 完成編輯</button></div>
+    </div><div class="ed-list">`;
+  d.items.forEach((it,ii)=>{
+    if(it.type==="tr" || it.tr){
+      h+=`<div class="ed-item ed-tr">
+        <div class="ed-row1"><span class="ed-badge">🚉 交通</span><span class="ed-ctrl">${edMove(di,ii)}<button class="ed-del" onclick="itinDel(${di},${ii})">✕</button></span></div>
+        <textarea class="ed-text" rows="2" placeholder="交通方式與路線" onchange="itinSet(${di},'text',this.value,${ii})">${esc(it.text||it.tr||"")}</textarea>
+      </div>`;
+    }else{
+      h+=`<div class="ed-item ed-stop">
+        <div class="ed-row1"><input class="ed-time" value="${escAttr(it.time||"")}" placeholder="時間 例 10:00 - 11:30" onchange="itinSet(${di},'time',this.value,${ii})"><span class="ed-ctrl">${edMove(di,ii)}<button class="ed-del" onclick="itinDel(${di},${ii})">✕</button></span></div>
+        <input class="ed-name" value="${escAttr(it.name||"")}" placeholder="景點 / 餐廳名稱" onchange="itinSet(${di},'name',this.value,${ii})">
+        <input class="ed-brief" value="${escAttr(it.brief||"")}" placeholder="一句話簡介" onchange="itinSet(${di},'brief',this.value,${ii})">
+        <input class="ed-map" value="${escAttr(it.map||"")}" placeholder="Google 地圖關鍵字(選填)" onchange="itinSet(${di},'map',this.value,${ii})">
+        <textarea class="ed-info" rows="3" placeholder="詳情,每行一項(選填)" onchange="itinSetInfo(${di},${ii},this.value)">${esc((it.info||[]).map(r=>r[1]).join("\n"))}</textarea>
+      </div>`;
+    }
+  });
+  h+=`</div><div class="ed-add"><button onclick="itinAdd(${di},'stop')">＋ 新增景點</button><button onclick="itinAdd(${di},'tr')">＋ 新增交通</button></div>`;
+  contentEl.innerHTML=h;
+}
+function itinSet(di,field,val,ii){ ensureItin(); if(ii===undefined){ ITIN[di][field]=val; } else { ITIN[di].items[ii][field]=val; } saveItin(); }
+function itinSetInfo(di,ii,text){ ensureItin(); const lines=text.split("\n").map(s=>s.trim()).filter(Boolean); ITIN[di].items[ii].info=lines.map(l=>["📝",l]); saveItin(); }
+function itinAdd(di,kind){
+  ensureItin();
+  if(kind==="tr"){ ITIN[di].items.push({type:"tr", text:"🚶 "}); }
+  else { ITIN[di].items.push({type:"stop", id:"n"+Date.now().toString(36)+Math.floor(Math.random()*1000), time:"", name:"新景點", brief:"", map:"", info:[]}); }
+  saveItin(); renderDayEdit(di);
+}
+function itinDel(di,ii){ if(!confirm("刪除這一項?")) return; ensureItin(); ITIN[di].items.splice(ii,1); saveItin(); renderDayEdit(di); }
+function itinMove(di,ii,dir){ ensureItin(); const a=ITIN[di].items, j=ii+dir; if(j<0||j>=a.length) return; const t=a[ii]; a[ii]=a[j]; a[j]=t; saveItin(); renderDayEdit(di); }
+
 const shell=document.getElementById("tabsShell");
 window.addEventListener("scroll",()=>{shell.classList.toggle("stuck",window.scrollY>170);});
 render();
@@ -689,6 +766,12 @@ function initFirebase(){
         listData[list]=v;
         if(curListName===list) renderList(list);
       });
+    });
+    db.ref("fukuoka/itinerary").on("value",snap=>{
+      const v=snap.val();
+      if(v===null){ db.ref("fukuoka/itinerary").set(seedItin()); return; }
+      ITIN=v;
+      if(cur<DAYS.length && !editMode) render();
     });
     return true;
   }catch(e){console.error("Firebase init failed",e); fbReady=false; return false;}
@@ -880,11 +963,12 @@ function fetchWeather(){
 function printItinerary(){
   const pa=document.getElementById("printArea");
   let h=`<div class="p-head"><h1>福岡 7天6夜行程　2026.7.21 – 7.27</h1><p>4 人・住宿:玉井親和民宿(博多區博多駅前 3-12-3)</p></div>`;
-  DAYS.forEach(d=>{
-    h+=`<div class="p-day"><h2>${d.d}　${d.date}　<span>${d.pay}</span></h2><div class="p-title">${esc(d.title)}</div><ul>`;
-    d.items.forEach(it=>{
-      if(it.tr){ h+=`<li class="p-tr">${esc(it.tr)}</li>`; }
-      else{ h+=`<li class="p-stop"><b>${esc(it.time)}</b>${esc(it.name)}${it.brief?`<span class="p-brief"> — ${esc(it.brief)}</span>`:""}</li>`; }
+  const days=(ITIN&&ITIN.length)?ITIN:DAYS;
+  days.forEach(d=>{
+    h+=`<div class="p-day"><h2>${d.d}　${d.date}　<span>${esc(d.pay)}</span></h2><div class="p-title">${esc(d.title)}</div><ul>`;
+    (d.items||[]).forEach(it=>{
+      if(it.tr||it.type==="tr"){ h+=`<li class="p-tr">${esc(it.tr||it.text||"")}</li>`; }
+      else{ h+=`<li class="p-stop"><b>${esc(it.time||"")}</b>${esc(it.name||"")}${it.brief?`<span class="p-brief"> — ${esc(it.brief)}</span>`:""}</li>`; }
     });
     h+=`</ul></div>`;
   });
