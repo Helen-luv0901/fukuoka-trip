@@ -955,7 +955,7 @@ function wxDesc(code){
   return ["🌡️","—"];
 }
 function weatherHtml(i){
-  const loc=WXLOC[i]||WXLOC[0];
+  const loc=(typeof WXLOC!=="undefined" && WXLOC && (WXLOC[i]||WXLOC[0])) || {name:"福岡",tenki:"9/43/8210/40132/"};
   const link=`<a class="wx-link" href="https://tenki.jp/forecast/${loc.tenki}" target="_blank" rel="noopener" onclick="event.stopPropagation()">tenki.jp ↗</a>`;
   if(WXDAY && WXDAY[i]){
     const w=WXDAY[i], d=wxDesc(w.code);
