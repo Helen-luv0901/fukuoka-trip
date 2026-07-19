@@ -247,6 +247,9 @@
   .weather .wx-t{color:var(--ink);}
   .weather .wx-p{color:var(--transit);}
   .weather .wx-src{font-size:.7rem; color:var(--sub); margin-left:auto;}
+  .weather .wx-loc{font-size:.74rem; color:var(--gold); font-weight:600;}
+  .weather .wx-link{font-size:.7rem; color:var(--accent); text-decoration:none; margin-left:auto; border:1px solid var(--accent-soft); padding:2px 9px; border-radius:999px; white-space:nowrap;}
+  .weather .wx-link:hover{background:var(--accent); color:#fff;}
   /* editable itinerary */
   .edit-day-btn{margin-left:auto; background:transparent; border:1px solid var(--gold); color:var(--gold); font-size:.74rem; padding:4px 13px; border-radius:999px; cursor:pointer; font-family:var(--sans); transition:.15s;}
   .edit-day-btn:hover{background:var(--gold); color:#fff;}
@@ -923,8 +926,17 @@ function viewPhoto(imgEl){
   document.body.appendChild(lb);
 }
 
-/* ---------- Daily weather (Open-Meteo, no key) ---------- */
-var WX=null;
+/* ---------- Daily weather (Open-Meteo per-location, 気象庁-based; +tenki.jp link) ---------- */
+var WXDAY=null; // array[7] = {code,tmax,tmin,pop} for each day's destination
+var WXLOC=[
+  {name:"博多・福岡市",        lat:33.590, lon:130.420, tenki:"9/43/8210/40132/"},
+  {name:"福岡市(六本松・別府)", lat:33.580, lon:130.385, tenki:"9/43/8210/40132/"},
+  {name:"天神・福岡市",        lat:33.591, lon:130.399, tenki:"9/43/8210/40132/"},
+  {name:"柳川・太宰府",        lat:33.163, lon:130.406, tenki:"9/43/8240/40207/"},
+  {name:"門司港・小倉",        lat:33.943, lon:130.963, tenki:"9/43/8220/40101/"},
+  {name:"由布院(大分)",       lat:33.265, lon:131.363, tenki:"9/47/8310/44213/"},
+  {name:"福岡機場",           lat:33.585, lon:130.451, tenki:"9/43/8210/40132/"}
+];
 function tripDateISO(i){
   const ds=(DAYS[i]&&DAYS[i].date)||""; const p=ds.split("/");
   const mm=parseInt(p[0],10)||7, dd=parseInt((p[1]||"").trim(),10)||1;
@@ -943,19 +955,26 @@ function wxDesc(code){
   return ["🌡️","—"];
 }
 function weatherHtml(i){
-  const iso=tripDateISO(i);
-  if(WX && WX[iso]){
-    const w=WX[iso], d=wxDesc(w.code);
-    return `<span class="wx-ic">${d[0]}</span><b>${d[1]}</b> <span class="wx-t">${Math.round(w.tmax)}° / ${Math.round(w.tmin)}°</span> <span class="wx-p">☔ ${w.pop==null?"-":w.pop+"%"}</span> <span class="wx-src">福岡・即時預報</span>`;
+  const loc=WXLOC[i]||WXLOC[0];
+  const link=`<a class="wx-link" href="https://tenki.jp/forecast/${loc.tenki}" target="_blank" rel="noopener" onclick="event.stopPropagation()">tenki.jp ↗</a>`;
+  if(WXDAY && WXDAY[i]){
+    const w=WXDAY[i], d=wxDesc(w.code);
+    return `<span class="wx-ic">${d[0]}</span><b>${d[1]}</b> <span class="wx-t">${Math.round(w.tmax)}° / ${Math.round(w.tmin)}°</span> <span class="wx-p">☔ ${w.pop==null?"-":w.pop+"%"}</span> <span class="wx-loc">📍 ${loc.name}</span> ${link}`;
   }
-  return `<span class="wx-ic">🌤️</span><b>7 月下旬・悶熱</b> <span class="wx-t">高約 32° / 低約 26°</span> <span class="wx-src">接近出發會自動更新即時預報</span>`;
+  return `<span class="wx-ic">🌤️</span><b>${loc.name}</b> <span class="wx-t" style="color:var(--sub)">預報載入中…</span> ${link}`;
 }
 function fetchWeather(){
-  const url="https://api.open-meteo.com/v1/forecast?latitude=33.5902&longitude=130.4017&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FTokyo&forecast_days=16";
+  const lats=WXLOC.map(l=>l.lat).join(","), lons=WXLOC.map(l=>l.lon).join(",");
+  const url="https://api.open-meteo.com/v1/forecast?latitude="+lats+"&longitude="+lons+"&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FTokyo&forecast_days=16";
   fetch(url).then(r=>r.json()).then(j=>{
-    const d=j&&j.daily; if(!d||!d.time) return;
-    WX={};
-    d.time.forEach((t,k)=>{ WX[t]={code:d.weather_code[k], tmax:d.temperature_2m_max[k], tmin:d.temperature_2m_min[k], pop:d.precipitation_probability_max?d.precipitation_probability_max[k]:null}; });
+    const arr=Array.isArray(j)?j:[j]; WXDAY=[];
+    for(let i=0;i<WXLOC.length;i++){
+      const L=arr[i], iso=tripDateISO(i);
+      if(L&&L.daily&&L.daily.time){
+        const k=L.daily.time.indexOf(iso);
+        WXDAY[i]= k>=0 ? {code:L.daily.weather_code[k], tmax:L.daily.temperature_2m_max[k], tmin:L.daily.temperature_2m_min[k], pop:L.daily.precipitation_probability_max?L.daily.precipitation_probability_max[k]:null} : null;
+      } else WXDAY[i]=null;
+    }
     if(cur<DAYS.length){ const el=document.getElementById("wxbar"); if(el) el.innerHTML=weatherHtml(cur); }
   }).catch(e=>{});
 }
