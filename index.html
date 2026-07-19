@@ -952,11 +952,34 @@ function weatherHtml(i){
   const link=`<a class="wx-link" href="https://tenki.jp/forecast/${loc.tenki}" target="_blank" rel="noopener" onclick="event.stopPropagation()">tenki.jp ↗</a>`;
   const w=WXDAY&&WXDAY[i];
   if(w){
-    return `<span class="wx-ic">${w.ic}</span><b>${w.t}</b> <span class="wx-t">${w.tmax}° / ${w.tmin}°</span> <span class="wx-p">☔ ${w.pop}%</span> <span class="wx-loc">📍 ${loc.name}・${WXSRC}</span> ${link}`;
+    return `<span class="wx-ic">${w.ic}</span><b>${w.t}</b> <span class="wx-t">${w.tmax}° / ${w.tmin}°</span> <span class="wx-p">☔ ${w.pop}%</span> <span class="wx-loc">📍 ${loc.name}・${w.live?"気象庁 即時":WXSRC}</span> ${link}`;
   }
   return `<span class="wx-ic">🌤️</span><b>${loc.name}</b> ${link}`;
 }
-function fetchWeather(){ /* 天氣採 tenki.jp 週間預報快照,不自動抓取(點連結看最新) */ }
+/* 即時天氣:直接讀気象庁(JMA)官方 JSON(tenki.jp 同源),每次載入自動更新;超出範圍的日期保留 tenki.jp 快照 */
+var WXPREF=["400000","400000","400000","400000","400000","440000","400000"]; // Day6=大分県(由布院)
+function tripISO(i){ const ds=(DAYS[i]&&DAYS[i].date)||""; const p=ds.split("/"); return "2026-"+String(parseInt(p[0],10)||7).padStart(2,"0")+"-"+String(parseInt((p[1]||"").trim(),10)||1).padStart(2,"0"); }
+var JMAW={"100":["☀️","晴"],"101":["🌤️","晴時多雲"],"102":["🌦️","晴一時雨"],"103":["🌦️","晴時々雨"],"110":["🌤️","晴轉陰"],"111":["⛅","晴轉陰"],"112":["🌦️","晴轉雨"],"113":["🌦️","晴轉雨"],"114":["🌦️","晴轉雨"],"119":["⛈️","晴轉雷雨"],"123":["☀️","晴"],"125":["⛈️","晴午後雷雨"],"126":["🌦️","晴午間雨"],"127":["🌦️","晴傍晚雨"],"128":["🌦️","晴夜雨"],"130":["☀️","晴"],"132":["⛅","晴時多雲"],"140":["⛈️","晴陣雨雷"],"200":["☁️","陰"],"201":["⛅","陰時晴"],"202":["🌧️","陰一時雨"],"203":["🌧️","陰時々雨"],"210":["⛅","陰轉晴"],"211":["⛅","陰轉晴"],"212":["🌧️","陰轉雨"],"213":["🌧️","陰轉雨"],"214":["🌧️","陰轉雨"],"218":["🌧️","陰轉雨"],"219":["🌧️","陰轉雨"],"223":["⛅","陰日間晴"],"224":["🌧️","陰午間雨"],"225":["🌧️","陰傍晚雨"],"226":["🌧️","陰夜雨"],"240":["⛈️","陰陣雨雷"],"300":["🌧️","雨"],"301":["🌦️","雨時晴"],"302":["🌧️","雨時停"],"306":["🌧️","大雨"],"308":["🌧️","雨暴風"],"311":["🌦️","雨轉晴"],"313":["🌧️","雨轉陰"],"314":["🌧️","雨轉陰"],"323":["🌦️","雨午間晴"],"328":["🌧️","雨強"],"350":["⛈️","雨雷"],"400":["🌨️","雪"],"406":["🌨️","大雪"],"411":["🌨️","雪轉晴"],"413":["🌨️","雪轉陰"],"414":["🌨️","雪轉雨"]};
+function jmaWx(code){ const s=String(code); if(JMAW[s]) return JMAW[s]; const n=parseInt(s,10)||0,f=Math.floor(n/100); return f===1?["☀️","晴"]:f===2?["☁️","陰"]:f===3?["🌧️","雨"]:f===4?["🌨️","雪"]:["🌡️","—"]; }
+function fetchWeather(){
+  const prefs=WXPREF.filter((v,i,a)=>a.indexOf(v)===i);
+  Promise.all(prefs.map(p=>fetch("https://www.jma.go.jp/bosai/forecast/data/forecast/"+p+".json").then(r=>r.json()).catch(()=>null))).then(res=>{
+    const byPref={}; prefs.forEach((p,idx)=>byPref[p]=res[idx]);
+    for(let i=0;i<7;i++){
+      const j=byPref[WXPREF[i]]; if(!j||!j[1]) continue;
+      const wk=j[1].timeSeries, iso=tripISO(i);
+      const di=wk[0].timeDefines.findIndex(t=>String(t).slice(0,10)===iso);
+      if(di<0) continue; // 超出 JMA 週間範圍 → 保留快照
+      const ti=wk[1].timeDefines.findIndex(t=>String(t).slice(0,10)===iso);
+      const wx=jmaWx(wk[0].areas[0].weatherCodes[di]);
+      const pop=wk[0].areas[0].pops[di];
+      const tmax=ti>=0?wk[1].areas[0].tempsMax[ti]:"", tmin=ti>=0?wk[1].areas[0].tempsMin[ti]:"";
+      const c0=WXDAY[i]||{};
+      WXDAY[i]={ic:wx[0], t:wx[1], tmax:tmax!==""?parseInt(tmax,10):c0.tmax, tmin:tmin!==""?parseInt(tmin,10):c0.tmin, pop:(pop!==""&&pop!=null)?parseInt(pop,10):c0.pop, live:true};
+    }
+    const el=document.getElementById("wxbar"); if(el&&cur<7) el.innerHTML=weatherHtml(cur);
+  }).catch(e=>{});
+}
 
 function printItinerary(){
   const pa=document.getElementById("printArea");
