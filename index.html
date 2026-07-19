@@ -927,57 +927,36 @@ function viewPhoto(imgEl){
 }
 
 /* ---------- Daily weather (Open-Meteo per-location, 気象庁-based; +tenki.jp link) ---------- */
-var WXDAY=null; // array[7] = {code,tmax,tmin,pop} for each day's destination
-var WXLOC=[
-  {name:"博多・福岡市",        lat:33.590, lon:130.420, tenki:"9/43/8210/40132/"},
-  {name:"福岡市(六本松・別府)", lat:33.580, lon:130.385, tenki:"9/43/8210/40132/"},
-  {name:"天神・福岡市",        lat:33.591, lon:130.399, tenki:"9/43/8210/40132/"},
-  {name:"柳川・太宰府",        lat:33.163, lon:130.406, tenki:"9/43/8240/40207/"},
-  {name:"門司港・小倉",        lat:33.943, lon:130.963, tenki:"9/43/8220/40101/"},
-  {name:"由布院(大分)",       lat:33.265, lon:131.363, tenki:"9/47/8310/44213/"},
-  {name:"福岡機場",           lat:33.585, lon:130.451, tenki:"9/43/8210/40132/"}
+/* 天氣:直接採用 tenki.jp 週間預報數字(2026/07/19 擷取);每天附 tenki.jp 連結看最新 */
+var WXSRC="tenki.jp 7/19";
+var WXDAY=[
+  {ic:"☀️", t:"晴",    tmax:35, tmin:27, pop:20},
+  {ic:"☀️", t:"晴",    tmax:35, tmin:27, pop:10},
+  {ic:"☀️", t:"晴",    tmax:35, tmin:27, pop:20},
+  {ic:"☀️", t:"晴",    tmax:35, tmin:27, pop:10},
+  {ic:"☀️", t:"晴",    tmax:33, tmin:27, pop:10},
+  {ic:"☀️", t:"晴",    tmax:34, tmin:24, pop:10},
+  {ic:"⛅", t:"陰轉晴", tmax:34, tmin:27, pop:20}
 ];
-function tripDateISO(i){
-  const ds=(DAYS[i]&&DAYS[i].date)||""; const p=ds.split("/");
-  const mm=parseInt(p[0],10)||7, dd=parseInt((p[1]||"").trim(),10)||1;
-  return "2026-"+String(mm).padStart(2,"0")+"-"+String(dd).padStart(2,"0");
-}
-function wxDesc(code){
-  if(code===0) return ["☀️","晴"];
-  if(code===1||code===2) return ["🌤️","多雲時晴"];
-  if(code===3) return ["☁️","陰"];
-  if(code===45||code===48) return ["🌫️","霧"];
-  if(code>=51&&code<=57) return ["🌦️","毛毛雨"];
-  if(code>=61&&code<=67) return ["🌧️","雨"];
-  if(code>=71&&code<=77) return ["🌨️","雪"];
-  if(code>=80&&code<=82) return ["🌦️","陣雨"];
-  if(code>=95) return ["⛈️","雷雨"];
-  return ["🌡️","—"];
-}
+var WXLOC=[
+  {name:"博多・福岡市",        tenki:"9/43/8210/40132/"},
+  {name:"福岡市(六本松・別府)", tenki:"9/43/8210/40132/"},
+  {name:"天神・福岡市",        tenki:"9/43/8210/40132/"},
+  {name:"柳川・太宰府",        tenki:"9/43/8240/40207/"},
+  {name:"門司港・小倉",        tenki:"9/43/8220/40101/"},
+  {name:"由布院(大分)",       tenki:"9/47/8310/44213/"},
+  {name:"福岡機場",           tenki:"9/43/8210/40132/"}
+];
 function weatherHtml(i){
-  const loc=(typeof WXLOC!=="undefined" && WXLOC && (WXLOC[i]||WXLOC[0])) || {name:"福岡",tenki:"9/43/8210/40132/"};
+  const loc=(WXLOC&&(WXLOC[i]||WXLOC[0]))||{name:"福岡",tenki:"9/43/8210/40132/"};
   const link=`<a class="wx-link" href="https://tenki.jp/forecast/${loc.tenki}" target="_blank" rel="noopener" onclick="event.stopPropagation()">tenki.jp ↗</a>`;
-  if(WXDAY && WXDAY[i]){
-    const w=WXDAY[i], d=wxDesc(w.code);
-    return `<span class="wx-ic">${d[0]}</span><b>${d[1]}</b> <span class="wx-t">${Math.round(w.tmax)}° / ${Math.round(w.tmin)}°</span> <span class="wx-p">☔ ${w.pop==null?"-":w.pop+"%"}</span> <span class="wx-loc">📍 ${loc.name}</span> ${link}`;
+  const w=WXDAY&&WXDAY[i];
+  if(w){
+    return `<span class="wx-ic">${w.ic}</span><b>${w.t}</b> <span class="wx-t">${w.tmax}° / ${w.tmin}°</span> <span class="wx-p">☔ ${w.pop}%</span> <span class="wx-loc">📍 ${loc.name}・${WXSRC}</span> ${link}`;
   }
-  return `<span class="wx-ic">🌤️</span><b>${loc.name}</b> <span class="wx-t" style="color:var(--sub)">預報載入中…</span> ${link}`;
+  return `<span class="wx-ic">🌤️</span><b>${loc.name}</b> ${link}`;
 }
-function fetchWeather(){
-  const lats=WXLOC.map(l=>l.lat).join(","), lons=WXLOC.map(l=>l.lon).join(",");
-  const url="https://api.open-meteo.com/v1/forecast?latitude="+lats+"&longitude="+lons+"&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FTokyo&forecast_days=16";
-  fetch(url).then(r=>r.json()).then(j=>{
-    const arr=Array.isArray(j)?j:[j]; WXDAY=[];
-    for(let i=0;i<WXLOC.length;i++){
-      const L=arr[i], iso=tripDateISO(i);
-      if(L&&L.daily&&L.daily.time){
-        const k=L.daily.time.indexOf(iso);
-        WXDAY[i]= k>=0 ? {code:L.daily.weather_code[k], tmax:L.daily.temperature_2m_max[k], tmin:L.daily.temperature_2m_min[k], pop:L.daily.precipitation_probability_max?L.daily.precipitation_probability_max[k]:null} : null;
-      } else WXDAY[i]=null;
-    }
-    if(cur<DAYS.length){ const el=document.getElementById("wxbar"); if(el) el.innerHTML=weatherHtml(cur); }
-  }).catch(e=>{});
-}
+function fetchWeather(){ /* 天氣採 tenki.jp 週間預報快照,不自動抓取(點連結看最新) */ }
 
 function printItinerary(){
   const pa=document.getElementById("printArea");
